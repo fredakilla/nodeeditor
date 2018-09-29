@@ -413,7 +413,8 @@ propagateData(std::shared_ptr<NodeData> nodeData) const
       nodeData = _converter(nodeData);
     }
 
-    _inNode->propagateData(nodeData, _inPortIndex);
+	if (_inPortIndex < _inNode->nodeDataModel()->nPorts(PortType::In))
+      _inNode->propagateData(nodeData, _inPortIndex);
   }
 }
 

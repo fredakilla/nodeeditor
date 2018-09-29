@@ -154,24 +154,28 @@ restoreConnection(QJsonObject const &connectionJson)
     return TypeConverter{};
   };
 
-  std::shared_ptr<Connection> connection =
-    createConnection(*nodeIn, portIndexIn,
-                     *nodeOut, portIndexOut,
-                     getConverter());
+  std::shared_ptr<Connection> connection;
+
+  if (portIndexIn < nodeIn->nodeState().getEntries(PortType::In).size() &&
+	  portIndexOut < nodeOut->nodeState().getEntries(PortType::Out).size())
+  {
+	  connection =
+		  createConnection(*nodeIn, portIndexIn,
+			  *nodeOut, portIndexOut,
+			  getConverter());
+  }
 
   return connection;
 }
-
 
 void
 FlowScene::
 deleteConnection(Connection& connection)
 {
-  connectionDeleted(connection);
   connection.removeFromNodes();
+  connectionDeleted(connection);
   _connections.erase(connection.id());
 }
-
 
 Node&
 FlowScene::
@@ -185,10 +189,11 @@ createNode(std::unique_ptr<NodeDataModel> && dataModel)
   auto nodePtr = node.get();
   _nodes[node->id()] = std::move(node);
 
+  connect(nodePtr, &Node::connectionRemoved, this, &FlowScene::deleteConnection);
+
   nodeCreated(*nodePtr);
   return *nodePtr;
 }
-
 
 Node&
 FlowScene::
@@ -210,6 +215,8 @@ restoreNode(QJsonObject const& nodeJson)
 
   auto nodePtr = node.get();
   _nodes[node->id()] = std::move(node);
+
+  connect(nodePtr, &Node::connectionRemoved, this, &FlowScene::deleteConnection);
 
   nodeCreated(*nodePtr);
   return *nodePtr;
@@ -234,6 +241,8 @@ removeNode(Node& node)
         deleteConnection(*pair.second);
     }
   }
+
+  disconnect(&node, &Node::connectionRemoved, this, &FlowScene::deleteConnection);
 
   _nodes.erase(node.id());
 }

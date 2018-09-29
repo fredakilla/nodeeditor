@@ -136,6 +136,9 @@ Q_SIGNALS:
   void
   computingFinished();
 
+  void
+  interfaceChanged();
+
 private:
 
   NodeStyle _nodeStyle;

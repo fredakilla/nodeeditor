@@ -97,6 +97,13 @@ public Q_SLOTS: // data propagation
   void
   onDataUpdated(PortIndex index);
 
+  void
+  onInterfaceChanged();
+
+signals:
+  void
+  connectionRemoved(Connection& connection);
+
 private:
 
   // addressing

@@ -83,6 +83,9 @@ public:
   bool
   resizing() const;
 
+  void
+  onInterfaceChanged(const NodeDataModel& model);
+
 private:
 
   std::vector<ConnectionPtrSet> _inConnections;

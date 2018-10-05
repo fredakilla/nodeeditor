@@ -100,7 +100,7 @@ public Q_SLOTS: // data propagation
   void
   onInterfaceChanged();
 
-signals:
+Q_SIGNALS:
   void
   connectionRemoved(Connection& connection);
 

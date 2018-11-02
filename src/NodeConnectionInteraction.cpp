@@ -6,6 +6,8 @@
 #include "DataModelRegistry.hpp"
 #include "FlowScene.hpp"
 
+#include <QQueue>
+
 using QtNodes::NodeConnectionInteraction;
 using QtNodes::PortType;
 using QtNodes::PortIndex;
@@ -43,6 +45,41 @@ canConnect(PortIndex &portIndex, TypeConverter & converter) const
 
   if (node == _node)
     return false;
+
+  // and forbid cyclic connection
+  if (node) {
+      auto isConnected = [](Node* a, Node* b) {
+          QQueue<Connection*> cons;
+          QQueue<Node*> nodes;
+          nodes.enqueue(a);
+          while (!nodes.isEmpty()) {
+              auto curNode = nodes.dequeue();
+              auto& curNodeState = curNode->nodeState();
+              auto curNodeCons = curNodeState.getEntries(PortType::Out);
+              for (auto& nodeCons : curNodeCons) {
+                  for (auto& nodeCon : nodeCons) {
+                      cons.enqueue(nodeCon.second);
+                  }
+              }
+              while (!cons.isEmpty()) {
+                  auto curCon = cons.dequeue();
+                  if (auto conNode = curCon->getNode(PortType::In)) {
+                      if (conNode == b)
+                          return true;
+                      nodes.enqueue(conNode);
+                  }
+              }
+          }
+          return false;
+      };
+      if (requiredPort == PortType::Out) {
+          if (isConnected(node, _node)) {
+              return false;
+          }
+      } else if (isConnected(_node, node)) {
+          return false;
+      }
+  }
 
   // 2) connection point is on top of the node port
 
